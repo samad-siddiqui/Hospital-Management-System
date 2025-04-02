@@ -1,0 +1,80 @@
+*.log
+*.pot
+*.pyc
+*.pyo
+*.swp
+*.swo
+__pycache__/
+*.db
+*.sqlite3
+*.pkl
+
+# Virtual Environment
+venv/
+.env
+
+# Django-specific files
+local_settings.py
+settings_local.py
+
+# Static and media files
+staticfiles/
+media/
+static/
+
+# Migrations
+*/migrations/__pycache__/
+*/migrations/*.pyc
+*/migrations/*.pyo
+*/migrations/*.swp
+*/migrations/*.swo
+*/migrations/*.db
+*/migrations/*.sqlite3
+
+# VS Code settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Celery
+celerybeat-schedule
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Logs
+logs/
+*.log
+
+# MyPy cache
+.mypy_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Docker
+*.dockerignore
+.env
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Pipenv
+Pipfile.lock
+
+# Node.js dependencies (if using React or other frontend tools)
+node_modules/
+
+# Yarn
+.yarn*
+
+# Compiled files
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
