@@ -43,21 +43,20 @@ class Patients(models.Model):
                               choices=Gender.choices,
                               blank=True, null=True)
     address = models.TextField(max_length=600, blank=True, null=True)
-    phone = models.CharField(max_length=15, blank=True, null=True)
-    email = models.EmailField(max_length=255, blank=True, null=True)
 
     @property
     def name(self):
         return f'{self.user.first_name} {self.user.last_name}'
 
     def __str__(self):
-        return f"Patient: {self.name} <{self.email}>"
+        return f"Patient: {self.name} <{self.user.email}>"
 
 
 class Insurance(models.Model):
     insurance_id = models.AutoField(primary_key=True)
     patient = models.OneToOneField(Patients,
-                                   on_delete=models.CASCADE)
+                                   on_delete=models.CASCADE,
+                                   related_name="insurance_patient")
     provider = models.CharField(max_length=255,
                                 blank=True,
                                 null=True)
@@ -72,6 +71,7 @@ class Department(models.Model):
     department_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     head_doctor = models.OneToOneField("Doctors", on_delete=models.SET_NULL,
+                                       related_name="head_doctor",
                                        blank=True,
                                        null=True)
 
@@ -82,14 +82,11 @@ class Department(models.Model):
 class Doctors(models.Model):
     doctor_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    gender = models.CharField(max_length=10,
+                              choices=Gender.choices,
+                              blank=True, null=True)
     specialization = models.CharField(max_length=255,
                                       blank=True, null=True)
-    phone = models.CharField(max_length=15, null=True,
-                             blank=True
-                             )
-    email = models.CharField(max_length=255,
-                             blank=True,
-                             null=True)
     department = models.ForeignKey(
         Department,
         on_delete=models.CASCADE,
@@ -97,13 +94,16 @@ class Doctors(models.Model):
         null=True,
         related_name='doctors'
     )
+    patient = models.ManyToManyField(Patients,
+                                     related_name="patient_doc")
 
     @property
     def name(self):
         return f'{self.user.first_name} {self.user.last_name}'
 
     def __str__(self):
-        return f"Dr. {self.specialization} <{self.department.name}>"
+        dept_name = self.department.name if self.department else "No Depart"
+        return f"Dr. {self.specialization} <{dept_name}>"
 
 
 class Status(models.TextChoices):
@@ -115,15 +115,63 @@ class Status(models.TextChoices):
 class Appointments(models.Model):
     appointment_id = models.AutoField(primary_key=True)
     patient = models.ForeignKey(Patients, on_delete=models.CASCADE,
-                                related_name="patient_id")
+                                related_name="appointments_as_patient")
     doctor = models.ForeignKey(Doctors, on_delete=models.CASCADE,
-                               related_name="doctor_id")
+                               related_name="appointments_as_doctor")
     appointment_date = models.DateTimeField()
     status = models.CharField(max_length=15, choices=Status.choices)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.patient.name} - {self.doctor.name} - {self.appointment_date}"
+        return f"{self.patient.name} - {self.appointment_date}"
+
 
 class Prescriptions(models.Model):
-    pass
+    prescription_id = models.AutoField(primary_key=True)
+    appointment = models.OneToOneField(Appointments,
+                                       unique=True,
+                                       on_delete=models.CASCADE,
+                                       related_name="prescription_appointments"
+                                       )
+    doctor = models.ForeignKey(Doctors, on_delete=models.CASCADE,
+                               related_name="prescription_doctor_id")
+    patient = models.ForeignKey(Patients, on_delete=models.CASCADE,
+                                related_name="prescription_patient_id")
+    medicine_detail = models.TextField(blank=True, null=True)
+    instructions = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Prescription for {self.patient.name}"
+
+
+class Surgeries(models.Model):
+    surgery_id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey(Patients, on_delete=models.CASCADE,
+                                related_name="patient_surgery")
+    doctor = models.ForeignKey(Doctors, on_delete=models.CASCADE,
+                               related_name="doctor_surgery")
+    surgery_date = models.DateTimeField()
+    surgery_type = models.CharField(max_length=255, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.patient.name} - {self.surgery_date}"
+
+
+class RelationshipType(models.TextChoices):
+    PRIMARY_CARE = 'Primary_Care'
+    CONSULTATION = 'Consultation'
+    SPECIALIST = 'Specialist'
+
+
+class Patient_Doctor(models.Model):
+    patient = models.ForeignKey(Patients, on_delete=models.CASCADE,
+                                related_name="doctor_relationships")
+    doctor = models.ForeignKey(Doctors, on_delete=models.CASCADE,
+                               related_name="patient_relationships")
+    relationship_type = models.CharField(max_length=15,
+                                         choices=RelationshipType.choices,
+                                         default=RelationshipType.PRIMARY_CARE)
+
+    def __str__(self):
+        return f"{self.patient.user.first_name}-{self.doctor.user.first_name}"
