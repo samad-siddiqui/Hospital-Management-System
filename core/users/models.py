@@ -55,7 +55,8 @@ class Patients(models.Model):
 class Insurance(models.Model):
     insurance_id = models.AutoField(primary_key=True)
     patient = models.OneToOneField(Patients,
-                                   on_delete=models.CASCADE)
+                                   on_delete=models.CASCADE,
+                                   related_name="insurance_patient")
     provider = models.CharField(max_length=255,
                                 blank=True,
                                 null=True)
@@ -81,6 +82,9 @@ class Department(models.Model):
 class Doctors(models.Model):
     doctor_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    gender = models.CharField(max_length=10,
+                              choices=Gender.choices,
+                              blank=True, null=True)
     specialization = models.CharField(max_length=255,
                                       blank=True, null=True)
     department = models.ForeignKey(
@@ -98,7 +102,7 @@ class Doctors(models.Model):
         return f'{self.user.first_name} {self.user.last_name}'
 
     def __str__(self):
-        dept_name = self.department.name if self.department else "No Department"
+        dept_name = self.department.name if self.department else "No Depart"
         return f"Dr. {self.specialization} <{dept_name}>"
 
 
